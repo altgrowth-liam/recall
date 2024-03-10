@@ -68,22 +68,42 @@ function App() {
       <header className="App-header">
         <h2>Recall</h2>
         <img src={logo} className="App-logo" alt="logo" />
-        {isLoading ? (
-          <ClipLoader size={150} color={"#123abc"} loading={isLoading} />
-        ) : (
-          <form onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="file"
-              accept=".mp3"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-            />
-            <button type="button" onClick={handleButtonClick}>
-              Upload & Publish MP3
-            </button>
-          </form>
-        )}
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <button 
+            type="button" 
+            onClick={handleButtonClick} 
+            disabled={isLoading} 
+            style={{ 
+              opacity: isLoading ? 0.5 : 1, 
+              position: 'relative',
+              padding: '8px 16px', // Adjust padding as needed to fit the text
+              fontSize: '16px', // Adjust font size as needed
+              overflow: 'hidden', // Ensures the loader does not extend the button size
+            }}
+          >
+            <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+              Upload MP3
+            </span>
+            {isLoading && (
+              <div style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                zIndex: 2, // Ensure the loader is above the text
+              }}>
+                <ClipLoader size={15} color={"#123abc"} loading={true} />
+              </div>
+            )}
+          </button>
+          <input
+            type="file"
+            accept=".mp3"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+          />
+        </div>
         {transcriptionResult && (
           <div>
             <h3>Transcription Summary:</h3>
