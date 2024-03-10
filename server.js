@@ -17,12 +17,6 @@ app.use(bodyParser.json());
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
-});
-
 //want to add, major topics, gaps in knowledge, and questions to ask
 app.get('/speaker', async (req, res) => {
   // const audioUrl = "https://www.uclass.psychol.ucl.ac.uk/Release2/Conversation/AudioOnly/wav/M_1216_11y1m_1.wav";
@@ -175,7 +169,13 @@ app.get('/speaker', async (req, res) => {
         console.error('Error:', error);
     }
   }
-  });
+});
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
