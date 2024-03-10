@@ -23,7 +23,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h2>Recall New</h2>
+        <h2>Recall</h2>
         <img src={logo} className="App-logo" alt="logo" />
         <form onSubmit={handleSubmit}>
           <input
@@ -34,9 +34,11 @@ function App() {
             ref={fileInputRef}
           />
           <button type="button" onClick={handleButtonClick}>
-            Choose MP3
+            Upload
           </button>
-          <button type="submit">Upload MP3</button>
+          <button type="submit" disabled={!selectedFile}>
+            Analyze
+          </button>
         </form>
       </header>
     </div>
