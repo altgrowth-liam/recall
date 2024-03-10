@@ -170,7 +170,7 @@ app.get('/speaker', async (req, res) => {
         console.log('Chat completion response:', chatCompletion.data.choices);
         return chatCompletion.data.choices;
     } catch (error) {
-        console.error('Error:', error.response.data);
+        console.error('Error:', error);
     }
   }
   });
