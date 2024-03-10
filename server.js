@@ -149,7 +149,7 @@ app.get('/speaker', async (req, res) => {
           //   }
           return JSON.parse(response.data.choices[0].message.content);
       } catch (error) {
-          console.error('Error:', error.response.data);
+          console.error('Error:', error.response);
       }
   }
 
