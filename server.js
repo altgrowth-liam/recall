@@ -111,6 +111,7 @@ app.get('/speaker', async (req, res) => {
                       "1. Return a summary of the conversation \n " +
                       "2. Return a list of major topics within the conversation \n " + 
                       "3. Return a list of possible gaps in knowledge from one of the speakers. \n" +
+                      "The response should be in the follow format: { \"summary\": \"Summary...\", \"majorTopics\": [ {\"topic1\": \"Topic 1..\"}, {\"topic2\": \"Topic 2..\"}], \"knowledgeGaps\": [ {\"gap1\": \"Gap 1..\"}, {\"gap2\": \"Gap 2..\"}]} \n " +
                       "Here is the text: " + JSON.stringify(transcriptText) },
                   ],
                   model: 'gpt-4-turbo-preview',
@@ -123,7 +124,7 @@ app.get('/speaker', async (req, res) => {
               }
           );
 
-          return response.data.choices[0].message.content;
+          return JSON.parse(response.data.choices[0].message.content);
         } catch (error) {
             console.error('Error during conversation summarization:', error); // Critical for debugging summarization errors
             throw new Error('Failed to summarize conversation');
