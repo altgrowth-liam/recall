@@ -123,7 +123,7 @@ app.get('/speaker', async (req, res) => {
               }
           );
 
-          return JSON.parse(response.data.choices[0].message.content);
+          return response.data.choices[0].message.content;
         } catch (error) {
             console.error('Error during conversation summarization:', error); // Critical for debugging summarization errors
             throw new Error('Failed to summarize conversation');
