@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import logo from './microphone.png';
 import './App.css';
 import AWS from 'aws-sdk';
-import { ClipLoader } from 'react-spinners'; // Importing a spinner
+import { ClipLoader } from 'react-spinners';
+import RecordRTC from 'recordrtc';
 
 // AWS S3 configuration
 AWS.config.update({
@@ -17,6 +18,8 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recorderRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = async (event) => {
@@ -62,11 +65,62 @@ function App() {
     }
   };
 
+  // Add a new ref to store the stream
+const streamRef = useRef(null);
+
+const startRecording = () => {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      streamRef.current = stream; // Store the stream in the ref
+      const recorder = new RecordRTC(stream, {
+        type: 'audio',
+        mimeType: 'audio/mp3',
+        recorderType: RecordRTC.StereoAudioRecorder,
+      });
+      recorder.startRecording();
+      recorderRef.current = recorder;
+      setIsRecording(true);
+    }).catch(error => {
+      console.error("Error accessing the microphone:", error);
+      alert("Error accessing the microphone: " + error.message);
+    });
+};
+
+const stopRecordingAndUpload = () => {
+  if (recorderRef.current) {
+    recorderRef.current.stopRecording(() => {
+      const blob = recorderRef.current.getBlob();
+      const audioFile = new File([blob], "audio_recording.mp3", { type: "audio/mp3" });
+      setSelectedFile(audioFile);
+      handleSubmit(audioFile);
+
+      // Stop the stream tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null; // Clear the ref after stopping the tracks
+      }
+
+      recorderRef.current = null;
+      setIsRecording(false);
+    });
+  }
+};
+
+  const handleLogoClick = () => {
+    if (isRecording) {
+      stopRecordingAndUpload();
+    } else {
+      startRecording();
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <h2>Recall</h2>
-        <img src={logo} className="App-logo" alt="logo" />
+        <div className="logo-wrapper" onClick={handleLogoClick}>
+          <img src={logo} className="App-logo" alt="logo" />
+        </div>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <button 
             type="button" 
@@ -75,12 +129,12 @@ function App() {
             style={{ 
               opacity: isLoading ? 0.5 : 1, 
               position: 'relative',
-              padding: '8px 16px', // Adjust padding as needed to fit the text
-              fontSize: '16px', // Adjust font size as needed
-              overflow: 'hidden', // Ensures the loader does not extend the button size
+              padding: '8px 16px',
+              fontSize: '16px',
+              overflow: 'hidden',
             }}
           >
-            <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+                      <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
               Upload MP3
             </span>
             {isLoading && (
@@ -89,7 +143,7 @@ function App() {
                 top: '50%', 
                 left: '50%', 
                 transform: 'translate(-50%, -50%)',
-                zIndex: 2, // Ensure the loader is above the text
+                zIndex: 2,
               }}>
                 <ClipLoader size={15} color={"#123abc"} loading={true} />
               </div>
@@ -110,13 +164,13 @@ function App() {
             <h3>Major Topics:</h3>
             <ul>
               {transcriptionResult.analysis.majorTopics.map((topic, index) => (
-                <li key={index}>{Object.values(topic)[0]}</li> // Assuming each topic is an object with a single key-value pair
+                <li key={index}>{Object.values(topic)[0]}</li>
               ))}
             </ul>
             <h3>Knowledge Gaps:</h3>
             <ul>
               {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
-                <li key={index}>{Object.values(gap)[0]}</li> // Assuming each gap is an object with a single key-value pair
+                <li key={index}>{Object.values(gap)[0]}</li>
               ))}
             </ul>
             <h3>Detailed Transcription:</h3>

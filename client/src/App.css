@@ -2,9 +2,20 @@
   text-align: center;
 }
 
+.logo-wrapper {
+  display: inline-block;
+  transition: transform 0.3s ease; /* Smooth transition for scaling */
+  cursor: pointer;
+}
+
+.logo-wrapper:hover {
+  transform: scale(1.1); /* Adjust scale value as needed */
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+  width: auto; /* Ensure the logo maintains its aspect ratio */
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -22,6 +33,11 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  transition: transform 0.3s ease; /* Smooth transition for moving */
+}
+
+.logo-wrapper:hover + .App-header {
+  transform: translateY(-10px); /* Adjust value as needed */
 }
 
 .App-link {
@@ -37,8 +53,6 @@
   }
 }
 
-/* Ensure this styling is present in your App.css */
-
 button {
   padding: 10px 20px;
   cursor: pointer;
@@ -47,6 +61,11 @@ button {
   border-radius: 5px;
   color: #fff;
   margin: 10px; /* Adjust spacing as needed */
+  transition: transform 0.3s ease; /* Smooth transition for moving */
+}
+
+.logo-wrapper:hover ~ div button {
+  transform: translateY(10px); /* Adjust value as needed */
 }
 
 button:hover {
