@@ -76,7 +76,8 @@ function App() {
       console.log('File URL:', data.Location);
       const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${data.Location}`);
       if (!speakerResponse.ok) {
-        throw new Error('Network response was not ok');
+        const errorResponse = await speakerResponse.json();
+        throw new Error(errorResponse.error || 'Default Error Message');
       }
       const speakerData = await speakerResponse.json();
       setTranscriptionResult(speakerData);

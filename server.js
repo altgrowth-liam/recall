@@ -39,7 +39,7 @@ app.get('/speaker', async (req, res) => {
     const parsedTranscription = parseAndLogSpeakerText(transcription);
     if (parsedTranscription.length === 0) {
       console.error("No transcription text found."); // Critical for debugging empty transcriptions
-      return res.status(400).json({ error: "No transcription text found. Please provide a valid audio source." });
+      return res.status(400).json({ error: "No transcription text found. Please provide a clear audio source." });
     }
 
     const summary = await summarizeConversation(parsedTranscription);
