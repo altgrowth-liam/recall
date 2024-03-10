@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
-
+//want to add, major topics, gaps in knowledge, and questions to ask
 app.get('/speaker', async (req, res) => {
   // const audioUrl = "https://www.uclass.psychol.ucl.ac.uk/Release2/Conversation/AudioOnly/wav/M_1216_11y1m_1.wav";
   const audioUrl = req.query.audioUrl;
@@ -61,7 +61,7 @@ app.get('/speaker', async (req, res) => {
     const summary = await summarizeConversation(parsedTranscription);
     res.json({
       transcription: parsedTranscription,
-      summary: summary
+      analysis: summary
     });
   } catch (error) {
     console.error(error);
@@ -123,7 +123,12 @@ app.get('/speaker', async (req, res) => {
               apiUrl,
               {
                   messages: [
-                      { role: 'system', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
+                      { role: 'system', content: "Can you do the following with the below text: \n " +
+                      "1. Return a summary of the conversation \n " +
+                      "2. Return a list of major topics within the conversation \n " + 
+                      "3. Return a list of possible gaps in knowledge from one of the speakers. \n" +
+                      "The response should be in the follow format: { \"summary\": \"Summary...\", \"majorTopics\": [ {\"topic1\": \"Topic 1..\"}, {\"topic2\": \"Topic 2..\"}], \"knowledgeGaps\": [ {\"gap1\": \"Gap 1..\"}, {\"gap2\": \"Gap 2..\"}]} \n " +
+                      "Here is the text: " + JSON.stringify(transcriptText) },
                   ],
                   model: 'gpt-4-turbo-preview', // Specify the model to use
               },
@@ -136,7 +141,17 @@ app.get('/speaker', async (req, res) => {
           );
 
           console.log('Chat completion response:', response.data.choices);
-          return response.data.choices[0].message.content;
+          // let fixedContentString = response.data.choices[0].message.conten.replace(/'/g, '"').replace(/\n/g, '');
+
+          //   try {
+          //       const parsedContent = JSON.parse(fixedContentString);
+          //       console.log('Parsed content:', parsedContent);
+          //       return parsedContent;
+          //   } catch (error) {
+          //       console.error('Error parsing content:', error);
+          //       // Handle the parsing error, maybe log it or use a fallback
+          //   }
+          return JSON.parse(response.data.choices[0].message.content);
       } catch (error) {
           console.error('Error:', error.response.data);
       }
