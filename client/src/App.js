@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import logo from './microphone.png';
 import './App.css';
 import AWS from 'aws-sdk';
@@ -19,8 +19,30 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [fadeEffect, setFadeEffect] = useState(true); // New state for controlling fade effect
+  const displayTextRef = useRef('Recall'); // Ref to hold the current display text
   const recorderRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Function to update text with fade effect
+  const updateDisplayText = (newText) => {
+    setFadeEffect(false); // Start fade out
+    setTimeout(() => {
+      displayTextRef.current = newText; // Update text after fade out
+      setFadeEffect(true); // Start fade in
+    }, 500); // Match timeout with CSS transition duration
+  };
+
+  // Effect to update display text based on isRecording and isLoading
+  useEffect(() => {
+    if (isRecording) {
+      updateDisplayText('Listening...');
+    } else if (isLoading) {
+      updateDisplayText('Loading...');
+    } else {
+      updateDisplayText('Recall');
+    }
+  }, [isRecording, isLoading]);
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
@@ -117,8 +139,10 @@ const stopRecordingAndUpload = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <h2>Recall</h2>
-        <div className="logo-wrapper" onClick={handleLogoClick}>
+        <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
+          {displayTextRef.current}
+        </h2>
+        <div className={`logo-wrapper ${isRecording ? 'breathing' : ''}`} onClick={handleLogoClick}>
           <img src={logo} className="App-logo" alt="logo" />
         </div>
         <div style={{ position: 'relative', display: 'inline-block' }}>

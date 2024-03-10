@@ -12,6 +12,19 @@
   transform: scale(1.1); /* Adjust scale value as needed */
 }
 
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1); /* Adjust scale value as needed */
+  }
+}
+
+.logo-wrapper.breathing {
+  animation: breathing 2s ease-in-out infinite;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -37,7 +50,7 @@
 }
 
 .logo-wrapper:hover + .App-header {
-  transform: translateY(-10px); /* Adjust value as needed */
+  transform: translateY(-200px); /* Adjust value as needed */
 }
 
 .App-link {
@@ -74,4 +87,13 @@ button:hover {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+.fade-text {
+  transition: opacity 0.5s ease;
+  opacity: 1;
+}
+
+.fade-text.fade-out {
+  opacity: 0;
 }
