@@ -81,6 +81,11 @@ button {
   transform: translateY(10px); /* Adjust value as needed */
 }
 
+.logo-wrapper.shrink {
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
 button:hover {
   background-color: #a94646;
   transform: scale(1.2);

@@ -15,6 +15,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 function App() {
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState(null);
@@ -181,22 +182,24 @@ function App() {
             <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
               {displayTextRef.current}
             </h2>
-            <div className={`logo-wrapper ${isRecording ? 'breathing' : ''}`} onClick={handleLogoClick}>
-              <img src={logo} className="App-logo" alt="logo" />
+            <div className={`logo-wrapper ${isRecording ? 'breathing' : ''} ${isButtonHovered ? 'shrink' : ''}`} onClick={handleLogoClick}>
+                <img src={logo} className="App-logo" alt="logo" />
             </div>
             <div style={{ position: 'relative', display: 'inline-block' }}>
-              <button 
-                type="button" 
-                onClick={handleButtonClick} 
-                disabled={isLoading} 
-                style={{ 
-                  opacity: isLoading ? 0.5 : 1, 
-                  position: 'relative',
-                  padding: '8px 16px',
-                  fontSize: '16px',
-                  overflow: 'hidden',
-                }}
-              >
+            <button 
+              type="button" 
+              onMouseEnter={() => setIsButtonHovered(true)}
+              onMouseLeave={() => setIsButtonHovered(false)}
+              onClick={handleButtonClick} 
+              disabled={isLoading} 
+              style={{ 
+                opacity: isLoading ? 0.5 : 1, 
+                position: 'relative',
+                padding: '8px 16px',
+                fontSize: '16px',
+                overflow: 'hidden',
+              }}
+            >
                 <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
                   Upload MP3
                 </span>
