@@ -97,3 +97,39 @@ button:disabled {
 .fade-text.fade-out {
   opacity: 0;
 }
+
+/* New CSS for transitions */
+.slide-out {
+  animation: slideOut 0.5s forwards;
+}
+
+.slide-in {
+  animation: slideIn 0.5s forwards;
+}
+
+.offscreen {
+  transform: translateX(100%);
+}
+
+@keyframes slideOut {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Adjust the .App-header class to handle the content-loaded state */
+.App-header.content-loaded {
+  justify-content: flex-start; /* Align content to the start to make room for the incoming text */
+}

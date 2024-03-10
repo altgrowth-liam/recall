@@ -19,10 +19,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [fadeEffect, setFadeEffect] = useState(true); // New state for controlling fade effect
-  const displayTextRef = useRef('Recall'); // Ref to hold the current display text
+  const [fadeEffect, setFadeEffect] = useState(true);
+  const displayTextRef = useRef('Recall');
   const recorderRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [contentLoaded, setContentLoaded] = useState(false); // New state for controlling content transition
+
 
   // Function to update text with fade effect
   const updateDisplayText = (newText) => {
@@ -78,7 +80,7 @@ function App() {
       }
       const speakerData = await speakerResponse.json();
       setTranscriptionResult(speakerData);
-      alert('File processed successfully.');
+      setContentLoaded(true);
     } catch (err) {
       console.error('There was an error:', err.message);
       alert('Error: ' + err.message);
@@ -87,46 +89,53 @@ function App() {
     }
   };
 
+  // Add a useEffect to reset contentLoaded when a new file is selected
+  useEffect(() => {
+    if (selectedFile) {
+      setContentLoaded(false); // Reset contentLoaded when a new file is selected
+    }
+  }, [selectedFile]);
+
   // Add a new ref to store the stream
-const streamRef = useRef(null);
+  const streamRef = useRef(null);
 
-const startRecording = () => {
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      streamRef.current = stream; // Store the stream in the ref
-      const recorder = new RecordRTC(stream, {
-        type: 'audio',
-        mimeType: 'audio/mp3',
-        recorderType: RecordRTC.StereoAudioRecorder,
+  const startRecording = () => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        streamRef.current = stream; // Store the stream in the ref
+        const recorder = new RecordRTC(stream, {
+          type: 'audio',
+          mimeType: 'audio/mp3',
+          recorderType: RecordRTC.StereoAudioRecorder,
+        });
+        recorder.startRecording();
+        recorderRef.current = recorder;
+        setIsRecording(true);
+      }).catch(error => {
+        console.error("Error accessing the microphone:", error);
+        alert("Error accessing the microphone: " + error.message);
       });
-      recorder.startRecording();
-      recorderRef.current = recorder;
-      setIsRecording(true);
-    }).catch(error => {
-      console.error("Error accessing the microphone:", error);
-      alert("Error accessing the microphone: " + error.message);
-    });
-};
+  };
 
-const stopRecordingAndUpload = () => {
-  if (recorderRef.current) {
-    recorderRef.current.stopRecording(() => {
-      const blob = recorderRef.current.getBlob();
-      const audioFile = new File([blob], "audio_recording.mp3", { type: "audio/mp3" });
-      setSelectedFile(audioFile);
-      handleSubmit(audioFile);
+  const stopRecordingAndUpload = () => {
+    if (recorderRef.current) {
+      recorderRef.current.stopRecording(() => {
+        const blob = recorderRef.current.getBlob();
+        const audioFile = new File([blob], "audio_recording.mp3", { type: "audio/mp3" });
+        setSelectedFile(audioFile);
+        handleSubmit(audioFile);
 
-      // Stop the stream tracks
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null; // Clear the ref after stopping the tracks
-      }
+        // Stop the stream tracks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null; // Clear the ref after stopping the tracks
+        }
 
-      recorderRef.current = null;
-      setIsRecording(false);
-    });
-  }
-};
+        recorderRef.current = null;
+        setIsRecording(false);
+      });
+    }
+  };
 
   const handleLogoClick = () => {
     if (isRecording) {
@@ -138,51 +147,10 @@ const stopRecordingAndUpload = () => {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
-          {displayTextRef.current}
-        </h2>
-        <div className={`logo-wrapper ${isRecording ? 'breathing' : ''}`} onClick={handleLogoClick}>
-          <img src={logo} className="App-logo" alt="logo" />
-        </div>
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          <button 
-            type="button" 
-            onClick={handleButtonClick} 
-            disabled={isLoading} 
-            style={{ 
-              opacity: isLoading ? 0.5 : 1, 
-              position: 'relative',
-              padding: '8px 16px',
-              fontSize: '16px',
-              overflow: 'hidden',
-            }}
-          >
-                      <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-              Upload MP3
-            </span>
-            {isLoading && (
-              <div style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                left: '50%', 
-                transform: 'translate(-50%, -50%)',
-                zIndex: 2,
-              }}>
-                <ClipLoader size={15} color={"#123abc"} loading={true} />
-              </div>
-            )}
-          </button>
-          <input
-            type="file"
-            accept=".mp3"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-            ref={fileInputRef}
-          />
-        </div>
-        {transcriptionResult && (
-          <div>
+      <header className={`App-header ${contentLoaded ? 'content-loaded' : ''}`}>
+        {transcriptionResult && transcriptionResult.analysis ? (
+          // Display analysis text when available
+          <div className="analysis-container slide-in">
             <h3>Transcription Summary:</h3>
             <p>{transcriptionResult.analysis.summary}</p>
             <h3>Major Topics:</h3>
@@ -204,6 +172,52 @@ const stopRecordingAndUpload = () => {
               </div>
             ))}
           </div>
+        ) : (
+          // Otherwise, display the logo and upload button
+          <>
+            <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
+              {displayTextRef.current}
+            </h2>
+            <div className={`logo-wrapper ${isRecording ? 'breathing' : ''}`} onClick={handleLogoClick}>
+              <img src={logo} className="App-logo" alt="logo" />
+            </div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button 
+                type="button" 
+                onClick={handleButtonClick} 
+                disabled={isLoading} 
+                style={{ 
+                  opacity: isLoading ? 0.5 : 1, 
+                  position: 'relative',
+                  padding: '8px 16px',
+                  fontSize: '16px',
+                  overflow: 'hidden',
+                }}
+              >
+                <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+                  Upload MP3
+                </span>
+                {isLoading && (
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '50%', 
+                    left: '50%', 
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 2,
+                  }}>
+                    <ClipLoader size={15} color={"#123abc"} loading={true} />
+                  </div>
+                )}
+              </button>
+              <input
+                type="file"
+                accept=".mp3"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                ref={fileInputRef}
+              />
+            </div>
+          </>
         )}
       </header>
     </div>
