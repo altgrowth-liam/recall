@@ -52,6 +52,9 @@ app.get('/speaker', async (req, res) => {
 
     const transcription = await checkTranscriptionStatus(transcriptId);
     const parsedTranscription = parseAndLogSpeakerText(transcription);
+    if (parsedTranscription.length === 0) {
+      return res.status(400).json({ error: "No transcription text found. Please provide a valid audio source." });
+    }
 
     // Since summarizeConversation is async, await its result before sending the response
     const summary = await summarizeConversation(parsedTranscription);
