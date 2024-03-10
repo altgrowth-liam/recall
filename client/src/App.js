@@ -4,7 +4,7 @@ import './App.css';
 import AWS from 'aws-sdk';
 import { ClipLoader } from 'react-spinners'; // Importing a spinner
 
-
+// AWS S3 configuration
 AWS.config.update({
   accessKeyId: 'AKIA5EETVYKJKUFIN44G',
   secretAccessKey: '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',
@@ -16,6 +16,7 @@ const s3 = new AWS.S3();
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [transcriptionResult, setTranscriptionResult] = useState(null); // State to store the transcription result
   const fileInputRef = useRef(null);
 
   const handleFileChange = async (event) => {
@@ -28,7 +29,7 @@ function App() {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = async (file) => { // Adjust to accept a file parameter
+  const handleSubmit = async (file) => {
     if (!file) {
       alert('Please select a file first.');
       return;
@@ -46,10 +47,17 @@ function App() {
     try {
       const data = await s3.upload(params).promise();
       console.log('File URL:', data.Location);
-      alert('File uploaded successfully. URL: ' + data.Location);
+      // After successful upload, make a GET request to the `/speaker` route
+      const speakerResponse = await fetch(`http://localhost:3000/speaker?audioUrl=${data.Location}`);
+      if (!speakerResponse.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const speakerData = await speakerResponse.json();
+      setTranscriptionResult(speakerData); // Store the response data in state
+      alert('File processed successfully.');
     } catch (err) {
-      console.error('There was an error uploading your file:', err.message);
-      alert('Error uploading file: ' + err.message);
+      console.error('There was an error:', err.message);
+      alert('Error: ' + err.message);
     } finally {
       setIsLoading(false); // End loading
     }
@@ -61,7 +69,7 @@ function App() {
         <h2>Recall</h2>
         <img src={logo} className="App-logo" alt="logo" />
         {isLoading ? (
-          <ClipLoader size={10} color={"#123abc"} loading={isLoading} /> // Using ClipLoader spinner
+          <ClipLoader size={150} color={"#123abc"} loading={isLoading} />
         ) : (
           <form onSubmit={(e) => e.preventDefault()}>
             <input
@@ -75,6 +83,18 @@ function App() {
               Upload & Publish MP3
             </button>
           </form>
+        )}
+        {transcriptionResult && (
+          <div>
+            <h3>Transcription Summary:</h3>
+            <p>{transcriptionResult.summary}</p>
+            <h3>Detailed Transcription:</h3>
+            {transcriptionResult.transcription.map((item, index) => (
+              <div key={index}>
+                <strong>{item.speaker}:</strong> {item.text}
+              </div>
+            ))}
+          </div>
         )}
       </header>
     </div>
