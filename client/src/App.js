@@ -16,13 +16,13 @@ const s3 = new AWS.S3();
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [transcriptionResult, setTranscriptionResult] = useState(null); // State to store the transcription result
+  const [transcriptionResult, setTranscriptionResult] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
-    await handleSubmit(file); // Pass the file directly to handleSubmit
+    await handleSubmit(file);
   };
 
   const handleButtonClick = () => {
@@ -35,7 +35,7 @@ function App() {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     const params = {
       Bucket: 'recallbucket',
@@ -47,19 +47,18 @@ function App() {
     try {
       const data = await s3.upload(params).promise();
       console.log('File URL:', data.Location);
-      // After successful upload, make a GET request to the `/speaker` route
       const speakerResponse = await fetch(`http://localhost:3000/speaker?audioUrl=${data.Location}`);
       if (!speakerResponse.ok) {
         throw new Error('Network response was not ok');
       }
       const speakerData = await speakerResponse.json();
-      setTranscriptionResult(speakerData); // Store the response data in state
+      setTranscriptionResult(speakerData);
       alert('File processed successfully.');
     } catch (err) {
       console.error('There was an error:', err.message);
       alert('Error: ' + err.message);
     } finally {
-      setIsLoading(false); // End loading
+      setIsLoading(false);
     }
   };
 
@@ -107,7 +106,19 @@ function App() {
         {transcriptionResult && (
           <div>
             <h3>Transcription Summary:</h3>
-            <p>{transcriptionResult.summary}</p>
+            <p>{transcriptionResult.analysis.summary}</p>
+            <h3>Major Topics:</h3>
+            <ul>
+              {transcriptionResult.analysis.majorTopics.map((topic, index) => (
+                <li key={index}>{Object.values(topic)[0]}</li> // Assuming each topic is an object with a single key-value pair
+              ))}
+            </ul>
+            <h3>Knowledge Gaps:</h3>
+            <ul>
+              {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
+                <li key={index}>{Object.values(gap)[0]}</li> // Assuming each gap is an object with a single key-value pair
+              ))}
+            </ul>
             <h3>Detailed Transcription:</h3>
             {transcriptionResult.transcription.map((item, index) => (
               <div key={index}>
