@@ -83,6 +83,7 @@ button {
 
 button:hover {
   background-color: #a94646;
+  transform: scale(1.2);
 }
 
 button:disabled {
