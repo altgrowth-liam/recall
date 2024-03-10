@@ -81,6 +81,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const axios = require('axios');
+// const { OpenAI } = require('openai');
 
 
 require('dotenv').config();
@@ -90,6 +91,10 @@ const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// const openai = new OpenAI({
+//   apiKey: "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",
+// });
 
 // Example route
 app.get('/', (req, res) => {
@@ -130,7 +135,6 @@ app.get('/speaker', (req, res) => {
         axios.get(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, { headers })
           .then(response => {
             if (response.data.status === 'completed') {
-              console.log(summarizeConversation(response.data));
               resolve(response.data);
             } else if (response.data.status === 'failed') {
               reject('Transcription failed');
@@ -169,6 +173,7 @@ app.get('/speaker', (req, res) => {
     } else {
       console.log('No speaker information found.');
     }
+    console.log(summarizeConversation(result));
     return result;
   }
 
@@ -199,136 +204,62 @@ app.get('/speaker', (req, res) => {
   //           throw error;
   //       });
   // }
-  async function summarizeConversation(transcriptText) {
-    const apiUrl = 'https://api.openai.com/v1/chat/completions';
-    const apiKey = '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';
-    console.log("transcription text: " + transcriptText)
-    try {
-        const response = await axios.post(
-            apiUrl,
-            {
-                messages: [
-                    { role: 'system', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
-                ],
-                model: 'gpt-4-turbo-preview', // Specify the model to use
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${apiKey}`,
-                },
-            }
-        );
+    async function summarizeConversation(transcriptText) {
+      const apiUrl = 'https://api.openai.com/v1/chat/completions';
+      const apiKey = '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';
+      console.log("transcription text: " + JSON.stringify(transcriptText))
+      try {
+          const response = await axios.post(
+              apiUrl,
+              {
+                  messages: [
+                      { role: 'system', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
+                  ],
+                  model: 'gpt-4-turbo-preview', // Specify the model to use
+              },
+              {
+                  headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${apiKey}`,
+                  },
+              }
+          );
 
-        console.log('Chat completion response:', response.data.choices);
-        return response.data.choices;
+          console.log('Chat completion response:', response.data.choices);
+          return response.data.choices;
+      } catch (error) {
+          console.error('Error:', error.response.data);
+      }
+  }
+
+
+  async function summarizeConversationSDK(transcriptText) {
+    try {
+        // const response = await openai.complete({
+        //     model: 'gpt-4-turbo-preview',
+        //     messages: [
+        //         { role: 'system', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
+        //     ],
+        // });
+        const chatCompletion = await openai.chat.completions.create({  // Use v1/chat/completions
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            { role: 'user', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
+          ],
+        });
+
+        console.log('Chat completion response:', chatCompletion.data.choices);
+        return chatCompletion.data.choices;
     } catch (error) {
         console.error('Error:', error.response.data);
     }
-}
-  
-});
+  }
+  });
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
 
-// const express = require('express');
-// const axios = require('axios');
 
-// require('dotenv').config();
-
-// const app = express();
-// const port = 3000;
-
-// app.use(express.json());
-
-// const assemblyAIHeaders = {
-//   "authorization": "39f2911cc92747f48fc783c98698ede0",
-//   "content-type": "application/json"
-// };
-
-// app.get('/transcribe-summarize', (req, res) => {
-//   const audioUrl = req.query.audioUrl; // Assuming audio URL is passed as a query parameter
-
-//   if (!audioUrl) {
-//     return res.status(400).send({ error: "No audio URL provided." });
-//   }
-
-//   // Transcribe audio and identify speakers
-//   axios.post('https://api.assemblyai.com/v2/transcript', {
-//     audio_url: audioUrl,
-//     speaker_labels: true
-//   }, { headers: assemblyAIHeaders })
-//     .then(transcriptionResponse => {
-//       const transcriptId = transcriptionResponse.data.id;
-//       return checkTranscriptionStatus(transcriptId);
-//     })
-//     .then(transcription => {
-//       // Once transcription is done, summarize the conversation
-//       console.log(transcription);
-//       return summarizeConversation(transcription)
-//         .then(summary => ({ transcription, summary }));
-//     })
-//     .then(result => {
-//       // Return both detailed transcription and summary
-//       res.json(result);
-//     })
-//     .catch(error => {
-//       console.error(error);
-//       res.status(500).send('Error processing request');
-//     });
-// });
-
-// function checkTranscriptionStatus(transcriptId) {
-//   return new Promise((resolve, reject) => {
-//     const attemptCheck = () => {
-//       axios.get(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, { headers: assemblyAIHeaders })
-//         .then(response => {
-//           if (response.data.status === 'completed') {
-//             resolve(response.data);
-//           } else if (response.data.status === 'failed') {
-//             reject('Transcription failed');
-//           } else {
-//             setTimeout(attemptCheck, 5000);
-//           }
-//         })
-//         .catch(error => reject(error));
-//     };
-//     attemptCheck();
-//   });
-// }
-
-// function summarizeConversation(transcriptText) {
-//   const openAIUrl = 'https://api.openai.com/v1/completions';
-
-//   const data = {
-//       model: "text-davinci-003", // Adjust with the latest or desired model
-//       prompt: `Summarize this conversation:\n\n${transcriptText}`,
-//       temperature: 0.5,
-//       max_tokens: 300,
-//       top_p: 1.0,
-//       frequency_penalty: 0.0,
-//       presence_penalty: 0.0,
-//   };
-
-//   const config = {
-//       headers: {
-//           'Authorization': `Bearer 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`,
-//           'Content-Type': 'application/json'
-//       }
-//   };
-
-//   return axios.post(openAIUrl, data, config)
-//       .then(response => response.data.choices[0].text.trim())
-//       .catch(error => {
-//           console.error("Error calling OpenAI API:", error);
-//           throw error;
-//       });
-// }
-
-// app.listen(port, () => {
-//   console.log(`Server running at http://localhost:${port}`);
-// });
 
 
