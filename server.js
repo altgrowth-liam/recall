@@ -14,7 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // const openai = new OpenAI({
-//   apiKey: "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",
+//   apiKey: process.env.OPENAI_API_KEY,
 // });
 
 // Example route
@@ -23,12 +23,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/speaker', async (req, res) => {
-  const apiKey = "39f2911cc92747f48fc783c98698ede0";
   // const audioUrl = "https://www.uclass.psychol.ucl.ac.uk/Release2/Conversation/AudioOnly/wav/M_1216_11y1m_1.wav";
   const audioUrl = req.query.audioUrl;
 
   const headers = {
-    "authorization": apiKey,
+    "authorization": process.env.ASSEMBLY_API_KEY,
     "content-type": "application/json"
   };
   
@@ -118,7 +117,6 @@ app.get('/speaker', async (req, res) => {
   }
     async function summarizeConversation(transcriptText) {
       const apiUrl = 'https://api.openai.com/v1/chat/completions';
-      const apiKey = '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';
       console.log("transcription text: " + JSON.stringify(transcriptText))
       try {
           const response = await axios.post(
@@ -132,13 +130,13 @@ app.get('/speaker', async (req, res) => {
               {
                   headers: {
                       'Content-Type': 'application/json',
-                      Authorization: `Bearer ${apiKey}`,
+                      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
                   },
               }
           );
 
           console.log('Chat completion response:', response.data.choices);
-          return response.data.choices;
+          return response.data.choices[0].message.content;
       } catch (error) {
           console.error('Error:', error.response.data);
       }
