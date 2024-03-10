@@ -40,7 +40,7 @@ function App() {
     if (isRecording) {
       updateDisplayText('Listening...');
     } else if (isLoading) {
-      updateDisplayText('Loading...');
+      updateDisplayText('Recalling...');
     } else {
       updateDisplayText('Recall');
     }
@@ -150,29 +150,31 @@ function App() {
     <div className="App">
       <header className={`App-header ${contentLoaded ? 'content-loaded' : ''}`}>
         {transcriptionResult && transcriptionResult.analysis ? (
-          // Display analysis text when available
-          <div className="analysis-container slide-in">
-            <h3>Transcription Summary:</h3>
-            <p>{transcriptionResult.analysis.summary}</p>
-            <h3>Major Topics:</h3>
-            <ul>
-              {transcriptionResult.analysis.majorTopics.map((topic, index) => (
-                <li key={index}>{Object.values(topic)[0]}</li>
+          <>
+            <img src={logo} className="window-top-right-logo" alt="logo" onClick={() => window.location.reload()} />
+            <div className="analysis-container slide-in">
+              <h3>Transcription Summary:</h3>
+              <p>{transcriptionResult.analysis.summary}</p>
+              <h3>Major Topics:</h3>
+              <ul>
+                {transcriptionResult.analysis.majorTopics.map((topic, index) => (
+                  <li key={index}>{Object.values(topic)[0]}</li>
+                ))}
+              </ul>
+              <h3>Knowledge Gaps:</h3>
+              <ul>
+                {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
+                  <li key={index}>{Object.values(gap)[0]}</li>
+                ))}
+              </ul>
+              <h3>Detailed Transcription:</h3>
+              {transcriptionResult.transcription.map((item, index) => (
+                <div key={index}>
+                  <strong>{item.speaker}:</strong> {item.text}
+                </div>
               ))}
-            </ul>
-            <h3>Knowledge Gaps:</h3>
-            <ul>
-              {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
-                <li key={index}>{Object.values(gap)[0]}</li>
-              ))}
-            </ul>
-            <h3>Detailed Transcription:</h3>
-            {transcriptionResult.transcription.map((item, index) => (
-              <div key={index}>
-                <strong>{item.speaker}:</strong> {item.text}
-              </div>
-            ))}
-          </div>
+            </div>
+          </>
         ) : (
           // Otherwise, display the logo and upload button
           <>

@@ -82,7 +82,7 @@ button {
 }
 
 button:hover {
-  background-color: #ce6767;
+  background-color: #a94646;
 }
 
 button:disabled {
@@ -132,4 +132,69 @@ button:disabled {
 /* Adjust the .App-header class to handle the content-loaded state */
 .App-header.content-loaded {
   justify-content: flex-start; /* Align content to the start to make room for the incoming text */
+}
+
+.analysis-container {
+  background-color: #e68a5c;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 800px;
+  width: 100%;
+  margin: 20px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.analysis-container h3 {
+  color: #a94646;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.analysis-container p, .analysis-container li {
+  text-align: left;
+}
+
+.analysis-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.analysis-container li {
+  margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.analysis-container li:hover {
+  background-color: #cc7a4e;
+  cursor: pointer;
+}
+
+.analysis-container div {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-left: 5px solid #a94646;
+  border-right: 5px solid #a94646;
+  border-radius: 5px;
+  margin-top: 40px;
+}
+
+.analysis-container strong {
+  color: #333;
+  margin-right: 5px;
+}
+
+.window-top-right-logo {
+  height: 7vmin; /* Adjust the size of the logo */
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.window-top-right-logo:hover {
+  transform: scale(1.2); /* Adjust scale value as needed */
 }
