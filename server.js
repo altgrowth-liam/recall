@@ -21,6 +21,39 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+app.get('/findOutMore', async (req, res) => {
+  const moreInfo = await findOutMore(req.query.topic);
+  res.json({
+    moreInfo: moreInfo,
+  });
+  async function findOutMore(transcriptText) {
+    const apiUrl = 'https://api.openai.com/v1/chat/completions';
+    console.log("transcription text: " + JSON.stringify(transcriptText))
+    try {
+        const response = await axios.post(
+            apiUrl,
+            {
+                messages: [
+                    { role: 'system', content: "Can you tell me more about the following topic: " + JSON.stringify(transcriptText) },
+                ],
+                model: 'gpt-4-turbo-preview', // Specify the model to use
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                },
+            }
+        );
+
+        // console.log('Chat completion response:', response.data.choices);
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error:', error.response.data);
+    }
+}
+});
 //want to add, major topics, gaps in knowledge, and questions to ask
 app.get('/speaker', async (req, res) => {
   // const audioUrl = "https://www.uclass.psychol.ucl.ac.uk/Release2/Conversation/AudioOnly/wav/M_1216_11y1m_1.wav";
@@ -35,20 +68,7 @@ app.get('/speaker', async (req, res) => {
     audio_url: audioUrl,
     speaker_labels: true
   };
-  
-  // axios.post('https://api.assemblyai.com/v2/transcript', body, { headers })
-  //   .then(response => {
-  //     const transcriptId = response.data.id;
-  //     console.log(`Transcription started with ID: ${transcriptId}`);
-  //     return checkTranscriptionStatus(transcriptId);
-  //   })
-  //   .then(transcription => {
-  //     res.json(parseAndLogSpeakerText(transcription));
-  //   })
-  //   .catch(error => {
-  //     console.error(error);
-  //     res.status(500).send('Error processing transcription');
-  //   });
+
   try {
     const startTranscriptionResponse = await axios.post('https://api.assemblyai.com/v2/transcript', body, { headers });
     const transcriptId = startTranscriptionResponse.data.id;
@@ -140,7 +160,7 @@ app.get('/speaker', async (req, res) => {
               }
           );
 
-          console.log('Chat completion response:', response.data.choices);
+          // console.log('Chat completion response:', response.data.choices);
           // let fixedContentString = response.data.choices[0].message.conten.replace(/'/g, '"').replace(/\n/g, '');
 
           //   try {
