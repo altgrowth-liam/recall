@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const axios = require('axios');
 // const { OpenAI } = require('openai');
+const path = require('path');
 
 
 require('dotenv').config();
@@ -13,14 +14,15 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
-// });
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
 
-// Example route
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
+
 //want to add, major topics, gaps in knowledge, and questions to ask
 app.get('/speaker', async (req, res) => {
   // const audioUrl = "https://www.uclass.psychol.ucl.ac.uk/Release2/Conversation/AudioOnly/wav/M_1216_11y1m_1.wav";
