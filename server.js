@@ -1,82 +1,3 @@
-// const express = require('express');
-// const bodyParser = require('body-parser');
-// const cors = require('cors');
-// const axios = require('axios');
-
-// require('dotenv').config();
-
-// const app = express();
-// const port = 3000;
-
-// app.use(cors());
-// app.use(bodyParser.json());
-
-// // Example route
-// app.get('/', (req, res) => {
-//     res.send('Hello World!');
-// });
-
-// app.get('/speaker', (req, res) => {
-//   const apiKey = "39f2911cc92747f48fc783c98698ede0";
-//   const audioUrl = "https://github.com/AssemblyAI-Examples/audio-examples/raw/main/20230607_me_canadian_wildfires.mp3";
-
-//   const headers = {
-//     "authorization": apiKey,
-//     "content-type": "application/json"
-//   };
-//   const body = {
-//     audio_url: audioUrl,
-//     speaker_labels: true
-//   };
-  
-//   axios.post('https://api.assemblyai.com/v2/transcript', body, { headers })
-//     .then(response => {
-//       const transcriptId = response.data.id;
-//       console.log(`Transcription started with ID: ${transcriptId}`);
-//       checkTranscriptionStatus(transcriptId);
-//     })
-//     .catch(error => console.error(error));
-  
-//   function checkTranscriptionStatus(transcriptId) {
-//     const statusCheckUrl = `https://api.assemblyai.com/v2/transcript/${transcriptId}`;
-//     axios.get(statusCheckUrl, { headers })
-//       .then(response => {
-//         if (response.data.status === 'completed') {
-//           // Parsing the transcription to log speaker-wise text
-//           parseAndLogSpeakerText(response.data);
-//         } else if (response.data.status === 'failed') {
-//           console.log('Transcription failed');
-//         } else {
-//           setTimeout(() => checkTranscriptionStatus(transcriptId), 5000);
-//         }
-//       })
-//       .catch(error => console.error(error));
-//   }
-  
-//   function parseAndLogSpeakerText(transcription) {
-//     if (transcription.words && transcription.words.length > 0) {
-//       const speakers = {}; // Object to hold speaker ID and their associated text
-  
-//       transcription.words.forEach(word => {
-//         if (!speakers[word.speaker]) {
-//           speakers[word.speaker] = [];
-//         }
-//         speakers[word.speaker].push(word.text);
-//       });
-  
-//       Object.keys(speakers).forEach(speaker => {
-//         console.log(`Speaker ${speaker}: ${speakers[speaker].join(' ')}`);
-//       });
-//     } else {
-//       console.log('No speaker information found.');
-//     }
-//   }
-// });
-
-// app.listen(port, () => {
-//   console.log(`Server is running on port: ${port}`);
-// });
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -176,34 +97,6 @@ app.get('/speaker', (req, res) => {
     console.log(summarizeConversation(result));
     return result;
   }
-
-  // function summarizeConversation(transcriptText) {
-  //   const openAIUrl = 'https://api.openai.com/v1/chat/completions';
-  
-  //   const data = {
-  //       model: "gpt-3.5-turbo", // Adjust with the latest or desired model
-  //       prompt: `Summarize this conversation:\n\n${transcriptText}`,
-  //       temperature: 0.5,
-  //       max_tokens: 300,
-  //       top_p: 1.0,
-  //       frequency_penalty: 0.0,
-  //       presence_penalty: 0.0,
-  //   };
-  
-  //   const config = {
-  //       headers: {
-  //           'Authorization': `Bearer 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`,
-  //           'Content-Type': 'application/json'
-  //       }
-  //   };
-  
-  //   return axios.post(openAIUrl, data, config)
-  //       .then(response => response.data.choices[0].text.trim())
-  //       .catch(error => {
-  //           console.error("Error calling OpenAI API:", error);
-  //           throw error;
-  //       });
-  // }
     async function summarizeConversation(transcriptText) {
       const apiUrl = 'https://api.openai.com/v1/chat/completions';
       const apiKey = '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';
@@ -235,12 +128,6 @@ app.get('/speaker', (req, res) => {
 
   async function summarizeConversationSDK(transcriptText) {
     try {
-        // const response = await openai.complete({
-        //     model: 'gpt-4-turbo-preview',
-        //     messages: [
-        //         { role: 'system', content: "Summarize the following conversation: " + JSON.stringify(transcriptText) },
-        //     ],
-        // });
         const chatCompletion = await openai.chat.completions.create({  // Use v1/chat/completions
           model: 'gpt-4-turbo-preview',
           messages: [
