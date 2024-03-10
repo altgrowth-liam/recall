@@ -74,7 +74,7 @@ function App() {
     try {
       const data = await s3.upload(params).promise();
       console.log('File URL:', data.Location);
-      const speakerResponse = await fetch(`http://localhost:3000/speaker?audioUrl=${data.Location}`);
+      const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${data.Location}`);
       if (!speakerResponse.ok) {
         throw new Error('Network response was not ok');
       }
