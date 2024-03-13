@@ -7,9 +7,9 @@ import RecordRTC from 'recordrtc';
 
 // AWS S3 configuration
 AWS.config.update({
-  accessKeyId: 'AKIA5EETVYKJKUFIN44G',
-  secretAccessKey: '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',
-  region: 'us-west-2',
+  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
+  region: process.env.REACT_APP_AWS_REGION,
 });
 
 const s3 = new AWS.S3();
