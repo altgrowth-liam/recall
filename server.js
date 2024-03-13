@@ -5,6 +5,7 @@ const axios = require('axios');
 const path = require('path');
 const multer = require('multer');
 const AWS = require('aws-sdk');
+const { OpenAI } = require('openai');
 
 require('dotenv').config();
 
@@ -22,6 +23,9 @@ const s3 = new AWS.S3();
 
 // Multer setup for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Initialize OpenAI
+const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -122,36 +126,26 @@ async function checkTranscriptionStatus(transcriptId) {
   });
 }
 
-// Helper function to summarize conversation
+// Updated summarizeConversation function
 async function summarizeConversation(transcriptText) {
-  const apiUrl = 'https://api.openai.com/v1/chat/completions';
   try {
-      const response = await axios.post(
-          apiUrl,
-          {
-              messages: [
-                  { role: 'system', content: "Can you do the following with the below text: \n " +
-                  "1. Return a summary of the conversation \n " +
-                  "2. Return a list of major topics within the conversation \n " + 
-                  "3. Return a list of possible gaps in knowledge from one of the speakers. \n " +
-                  "The response should be in the follow format: { \"summary\": \"Summary...\", \"majorTopics\": [ {\"topic1\": \"Topic 1..\"}, {\"topic2\": \"Topic 2..\"}], \"knowledgeGaps\": [ {\"gap1\": \"Gap 1..\"}, {\"gap2\": \"Gap 2..\"}]} \n " +
-                  "Here is the text: " + JSON.stringify(transcriptText) },
-              ],
-              model: 'gpt-4-turbo-preview',
-          },
-          {
-              headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-              },
-          }
-      );
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: 'system', content: "Can you do the following with the below text: \n " +
+          "1. Return a summary of the conversation \n " +
+          "2. Return a list of major topics within the conversation \n " + 
+          "3. Return a list of possible gaps in knowledge from one of the speakers. \n " +
+          "The response should be in the follow format: { \"summary\": \"Summary...\", \"majorTopics\": [ {\"topic1\": \"Topic 1..\"}, {\"topic2\": \"Topic 2..\"}], \"knowledgeGaps\": [ {\"gap1\": \"Gap 1..\"}, {\"gap2\": \"Gap 2..\"}]} \n " +
+          "Here is the text: " + JSON.stringify(transcriptText) }
+      ],
+    });
 
-      return JSON.parse(response.data.choices[0].message.content);
-    } catch (error) {
-        console.error('Error during conversation summarization:', error);
-        throw new Error('Failed to summarize conversation');
-    }
+    return JSON.parse(completion.choices[0].message.content);
+  } catch (error) {
+    console.error('Error during conversation summarization:', error);
+    throw new Error('Failed to summarize conversation');
+  }
 }
 
 app.get('*', (req, res) => {
