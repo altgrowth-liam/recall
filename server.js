@@ -4,18 +4,54 @@ const cors = require('cors');
 const axios = require('axios');
 // const { OpenAI } = require('openai');
 const path = require('path');
-
+const multer = require('multer');
+const AWS = require('aws-sdk');
 
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Configure AWS
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+const s3 = new AWS.S3();
+
+// Multer setup for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.use(cors());
 app.use(bodyParser.json());
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
+
+// New upload route
+app.post('/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const params = {
+    Bucket: 'recallbucket', // Use your bucket name
+    Key: `uploads/${req.file.originalname}`,
+    Body: req.file.buffer,
+    ACL: 'public-read',
+  };
+
+  try {
+    const data = await s3.upload(params).promise();
+    console.log('File uploaded successfully. Location:', data.Location);
+    res.json({ location: data.Location });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).send('Error uploading file.');
+  }
+});
 
 app.get('/speaker', async (req, res) => {
   const audioUrl = req.query.audioUrl;
