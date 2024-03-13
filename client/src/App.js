@@ -1,18 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import logo from './microphone.png';
 import './App.css';
-import AWS from 'aws-sdk';
 import { ClipLoader } from 'react-spinners';
 import RecordRTC from 'recordrtc';
-
-// AWS S3 configuration
-AWS.config.update({
-  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
-  region: process.env.REACT_APP_AWS_REGION,
-});
-
-const s3 = new AWS.S3();
 
 function App() {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -65,17 +55,21 @@ function App() {
 
     setIsLoading(true);
 
-    const params = {
-      Bucket: 'recallbucket',
-      Key: `uploads/${file.name}`,
-      Body: file,
-      ACL: 'public-read',
-    };
+    const formData = new FormData();
+    formData.append('file', file);
 
     try {
-      const data = await s3.upload(params).promise();
-      console.log('File URL:', data.Location);
-      const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${data.Location}`);
+      const uploadResponse = await fetch(`${window.location.origin}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file.');
+      }
+      const uploadResult = await uploadResponse.json();
+      console.log('File uploaded to:', uploadResult.location);
+
+      const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${uploadResult.location}`);
       if (!speakerResponse.ok) {
         const errorResponse = await speakerResponse.json();
         throw new Error(errorResponse.error || 'Default Error Message');
