@@ -4,19 +4,95 @@ import './App.css';
 import { ClipLoader } from 'react-spinners';
 import RecordRTC from 'recordrtc';
 
+const RecordButton = ({ isRecording, startRecording, stopRecordingAndUpload }) => {
+  return (
+    <div className={`logo-wrapper ${isRecording ? 'breathing' : ''}`} onClick={isRecording ? stopRecordingAndUpload : startRecording}>
+      <img src={logo} className="App-logo" alt="logo" />
+    </div>
+  );
+};
+
+const UploadButton = ({ isLoading, handleFileChange, handleButtonClick, fileInputRef }) => {
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        onClick={handleButtonClick}
+        disabled={isLoading}
+        style={{
+          opacity: isLoading ? 0.5 : 1,
+          position: 'relative',
+          padding: '8px 16px',
+          fontSize: '16px',
+          overflow: 'hidden',
+        }}
+      >
+        <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+          Upload MP3
+        </span>
+        {isLoading && (
+          <ClipLoader size={15} color={"#123abc"} loading={true} style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+          }} />
+        )}
+      </button>
+      <input
+        type="file"
+        accept=".mp3"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        ref={fileInputRef}
+      />
+    </div>
+  );
+};
+
+const TranscriptionResult = ({ transcriptionResult }) => {
+  return (
+    <div className="analysis-container slide-in">
+      <h3>Transcription Summary:</h3>
+      <p>{transcriptionResult.analysis.summary}</p>
+      <h3>Major Topics:</h3>
+      <ul>
+        {transcriptionResult.analysis.majorTopics.map((topic, index) => (
+          <li key={index}>{Object.values(topic)[0]}</li>
+        ))}
+      </ul>
+      <h3>Knowledge Gaps:</h3>
+      <ul>
+        {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
+          <li key={index}>{Object.values(gap)[0]}</li>
+        ))}
+      </ul>
+      <h3>Detailed Transcription:</h3>
+      {transcriptionResult.transcription.map((item, index) => (
+        <div key={index}>
+          <strong>{item.speaker}:</strong> {item.text}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 function App() {
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState(null);
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [fadeEffect, setFadeEffect] = useState(true);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0); // New state for current message index
+
   const displayTextRef = useRef('Recall');
   const recorderRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [contentLoaded, setContentLoaded] = useState(false); // New state for controlling content transition
-
-
+  const slideshowMessages = ['Recall', 'revisit any conversation', 'built for students, educators, & professionals', 'select mic to start recording'];
+  
   // Function to update text with fade effect
   const updateDisplayText = (newText) => {
     setFadeEffect(false); // Start fade out
@@ -26,15 +102,33 @@ function App() {
     }, 500); // Match timeout with CSS transition duration
   };
 
-  // Effect to update display text based on isRecording and isLoading
+  // Function to cycle through slideshow messages
+  const cycleSlideshowMessages = () => {
+    setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % slideshowMessages.length);
+  };
+
+  // Effect to start and stop the slideshow
+  useEffect(() => {
+    let intervalId;
+    if (!isRecording && !isLoading) {
+      updateDisplayText(slideshowMessages[currentMessageIndex]); // Initialize with the first message
+      intervalId = setInterval(() => {
+        cycleSlideshowMessages(); // Cycle through messages
+      }, 3000); // Change message every 2 seconds
+    } else {
+      clearInterval(intervalId); // Stop the slideshow
+    }
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, [isRecording, isLoading, currentMessageIndex]);
+
+  // Update the effect that handles isRecording and isLoading to not interfere with the slideshow
   useEffect(() => {
     if (isRecording) {
       updateDisplayText('Listening...');
     } else if (isLoading) {
       updateDisplayText('Recalling...');
-    } else {
-      updateDisplayText('Recall');
     }
+    // No else part here, as the slideshow takes over when both are false
   }, [isRecording, isLoading]);
 
   const handleFileChange = async (event) => {
@@ -153,92 +247,23 @@ function App() {
     }
   };
 
-  const handleLogoClick = () => {
-    if (isRecording) {
-      stopRecordingAndUpload();
-    } else {
-      startRecording();
-    }
-  };
-
   return (
     <div className="App">
       <header className={`App-header ${contentLoaded ? 'content-loaded' : ''}`}>
         {transcriptionResult && transcriptionResult.analysis ? (
           <>
             <img src={logo} className="window-top-right-logo" alt="logo" onClick={() => window.location.reload()} />
-            <div className="analysis-container slide-in">
-              <h3>Transcription Summary:</h3>
-              <p>{transcriptionResult.analysis.summary}</p>
-              <h3>Major Topics:</h3>
-              <ul>
-                {transcriptionResult.analysis.majorTopics.map((topic, index) => (
-                  <li key={index}>{Object.values(topic)[0]}</li>
-                ))}
-              </ul>
-              <h3>Knowledge Gaps:</h3>
-              <ul>
-                {transcriptionResult.analysis.knowledgeGaps.map((gap, index) => (
-                  <li key={index}>{Object.values(gap)[0]}</li>
-                ))}
-              </ul>
-              <h3>Detailed Transcription:</h3>
-              {transcriptionResult.transcription.map((item, index) => (
-                <div key={index}>
-                  <strong>{item.speaker}:</strong> {item.text}
-                </div>
-              ))}
-            </div>
+            <TranscriptionResult transcriptionResult={transcriptionResult} />
           </>
         ) : (
-          // Otherwise, display the logo and upload button
           <>
             <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
               {displayTextRef.current}
             </h2>
-            <div className={`logo-wrapper ${isRecording ? 'breathing' : ''} ${isButtonHovered ? 'shrink' : ''}`} onClick={handleLogoClick}>
-                <img src={logo} className="App-logo" alt="logo" />
-            </div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-            <button 
-              type="button" 
-              onMouseEnter={() => setIsButtonHovered(true)}
-              onMouseLeave={() => setIsButtonHovered(false)}
-              onClick={handleButtonClick} 
-              disabled={isLoading} 
-              style={{ 
-                opacity: isLoading ? 0.5 : 1, 
-                position: 'relative',
-                padding: '8px 16px',
-                fontSize: '16px',
-                overflow: 'hidden',
-              }}
-            >
-                <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-                  Upload MP3
-                </span>
-                {isLoading && (
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: '50%', 
-                    left: '50%', 
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 2,
-                  }}>
-                    <ClipLoader size={15} color={"#123abc"} loading={true} />
-                  </div>
-                )}
-              </button>
-              <input
-                type="file"
-                accept=".mp3"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-                ref={fileInputRef}
-              />
-            </div>
+            <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecordingAndUpload={stopRecordingAndUpload} />
+            <UploadButton isLoading={isLoading} handleFileChange={handleFileChange} handleButtonClick={handleButtonClick} fileInputRef={fileInputRef} />
           </>
-        )}
+          )}
       </header>
     </div>
   );
