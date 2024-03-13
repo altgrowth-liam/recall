@@ -3,7 +3,7 @@ const axios = require('axios');
 module.exports = function(app, upload, openai, s3) {
   // Upload route
   app.post('/upload', upload.single('file'), async (req, res) => {
-    console.log('\n\n==================== NEW REQUEST: /upload ====================\n');
+    console.log('\n\n\n==================== NEW REQUEST: /upload ====================');
     if (!req.file) {
       console.log('Upload attempt with no file.');
       return res.status(400).send('No file uploaded.');
@@ -30,7 +30,7 @@ module.exports = function(app, upload, openai, s3) {
 
   // Transcribe route
   app.post('/transcribe', async (req, res) => {
-    console.log('\n\n==================== NEW REQUEST: /transcribe ====================\n');
+    console.log('\n\n\n==================== NEW REQUEST: /transcribe ====================');
     const audioUrl = req.body.audioUrl;
     console.log(`Transcription request received for URL: ${audioUrl}`);
 
@@ -60,7 +60,7 @@ module.exports = function(app, upload, openai, s3) {
   // Summarize route
   app.post('/summarize', async (req, res) => {
     const transcriptText = req.body.transcriptText;
-    console.log('\n\n==================== NEW REQUEST: /summarize ====================\n');
+    console.log('\n\n\n==================== NEW REQUEST: /summarize ====================');
 
     try {
       const summary = await summarizeConversation(transcriptText);
