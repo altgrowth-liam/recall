@@ -52,12 +52,12 @@ function App() {
       alert('Please select a file first.');
       return;
     }
-
+  
     setIsLoading(true);
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     try {
       const uploadResponse = await fetch(`${window.location.origin}/upload`, {
         method: 'POST',
@@ -68,14 +68,34 @@ function App() {
       }
       const uploadResult = await uploadResponse.json();
       console.log('File uploaded to:', uploadResult.location);
-
-      const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${uploadResult.location}`);
-      if (!speakerResponse.ok) {
-        const errorResponse = await speakerResponse.json();
-        throw new Error(errorResponse.error || 'Default Error Message');
+  
+      // Transcribe
+      const transcribeResponse = await fetch(`${window.location.origin}/transcribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ audioUrl: uploadResult.location }),
+      });
+      if (!transcribeResponse.ok) {
+        throw new Error('Failed to transcribe audio.');
       }
-      const speakerData = await speakerResponse.json();
-      setTranscriptionResult(speakerData);
+      const transcription = await transcribeResponse.json();
+  
+      // Summarize
+      const summarizeResponse = await fetch(`${window.location.origin}/summarize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcriptText: transcription.text }), // Ensure this matches the expected format for your backend
+      });
+      if (!summarizeResponse.ok) {
+        throw new Error('Failed to summarize transcription.');
+      }
+      const summary = await summarizeResponse.json();
+  
+      setTranscriptionResult({ transcription: transcription.words, analysis: summary });
       setContentLoaded(true);
     } catch (err) {
       console.error('There was an error:', err.message);
