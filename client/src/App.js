@@ -1,18 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import logo from './microphone.png';
 import './App.css';
-import AWS from 'aws-sdk';
 import { ClipLoader } from 'react-spinners';
 import RecordRTC from 'recordrtc';
-
-// AWS S3 configuration
-AWS.config.update({
-  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
-  region: process.env.REACT_APP_AWS_REGION,
-});
-
-const s3 = new AWS.S3();
 
 function App() {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -62,26 +52,50 @@ function App() {
       alert('Please select a file first.');
       return;
     }
-
+  
     setIsLoading(true);
-
-    const params = {
-      Bucket: 'recallbucket',
-      Key: `uploads/${file.name}`,
-      Body: file,
-      ACL: 'public-read',
-    };
-
+  
+    const formData = new FormData();
+    formData.append('file', file);
+  
     try {
-      const data = await s3.upload(params).promise();
-      console.log('File URL:', data.Location);
-      const speakerResponse = await fetch(`${window.location.origin}/speaker?audioUrl=${data.Location}`);
-      if (!speakerResponse.ok) {
-        const errorResponse = await speakerResponse.json();
-        throw new Error(errorResponse.error || 'Default Error Message');
+      const uploadResponse = await fetch(`${window.location.origin}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file.');
       }
-      const speakerData = await speakerResponse.json();
-      setTranscriptionResult(speakerData);
+      const uploadResult = await uploadResponse.json();
+      console.log('File uploaded to:', uploadResult.location);
+  
+      // Transcribe
+      const transcribeResponse = await fetch(`${window.location.origin}/transcribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ audioUrl: uploadResult.location }),
+      });
+      if (!transcribeResponse.ok) {
+        throw new Error('Failed to transcribe audio.');
+      }
+      const transcription = await transcribeResponse.json();
+  
+      // Summarize
+      const summarizeResponse = await fetch(`${window.location.origin}/summarize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcriptText: transcription.text }), // Ensure this matches the expected format for your backend
+      });
+      if (!summarizeResponse.ok) {
+        throw new Error('Failed to summarize transcription.');
+      }
+      const summary = await summarizeResponse.json();
+  
+      setTranscriptionResult({ transcription: transcription.words, analysis: summary });
       setContentLoaded(true);
     } catch (err) {
       console.error('There was an error:', err.message);
