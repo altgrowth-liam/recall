@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import logo from './microphone.png';
 import './App.css';
 import { ClipLoader } from 'react-spinners';
 import RecordRTC from 'recordrtc';
+import TextBox from './components/TextBox';
 
 const RecordButton = ({ isRecording, startRecording, stopRecordingAndUpload }) => {
   return (
@@ -85,51 +86,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
-  const [fadeEffect, setFadeEffect] = useState(true);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0); // New state for current message index
 
-  const displayTextRef = useRef('Recall');
   const recorderRef = useRef(null);
   const fileInputRef = useRef(null);
-  const slideshowMessages = ['Recall', 'revisit any conversation', 'built for students, educators, & professionals', 'select mic to start recording'];
-  
-  // Function to update text with fade effect
-  const updateDisplayText = (newText) => {
-    setFadeEffect(false); // Start fade out
-    setTimeout(() => {
-      displayTextRef.current = newText; // Update text after fade out
-      setFadeEffect(true); // Start fade in
-    }, 500); // Match timeout with CSS transition duration
-  };
 
-  // Function to cycle through slideshow messages
-  const cycleSlideshowMessages = () => {
-    setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % slideshowMessages.length);
-  };
-
-  // Effect to start and stop the slideshow
-  useEffect(() => {
-    let intervalId;
-    if (!isRecording && !isLoading) {
-      updateDisplayText(slideshowMessages[currentMessageIndex]); // Initialize with the first message
-      intervalId = setInterval(() => {
-        cycleSlideshowMessages(); // Cycle through messages
-      }, 3000); // Change message every 2 seconds
-    } else {
-      clearInterval(intervalId); // Stop the slideshow
-    }
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, [isRecording, isLoading, currentMessageIndex]);
-
-  // Update the effect that handles isRecording and isLoading to not interfere with the slideshow
-  useEffect(() => {
-    if (isRecording) {
-      updateDisplayText('Listening...');
-    } else if (isLoading) {
-      updateDisplayText('Recalling...');
-    }
-    // No else part here, as the slideshow takes over when both are false
-  }, [isRecording, isLoading]);
+  const slideshowMessages = useMemo(() => [
+    'Recall', 
+    'revisit any conversation', 
+    'built for students, educators, & professionals', 
+    'select mic to start recording'
+  ], []);
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
@@ -257,9 +223,11 @@ function App() {
           </>
         ) : (
           <>
-            <h2 className={`fade-text ${fadeEffect ? '' : 'fade-out'}`}>
-              {displayTextRef.current}
-            </h2>
+            <TextBox 
+              isRecording={isRecording} 
+              isLoading={isLoading} 
+              slideshowMessages={slideshowMessages} 
+            />
             <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecordingAndUpload={stopRecordingAndUpload} />
             <UploadButton isLoading={isLoading} handleFileChange={handleFileChange} handleButtonClick={handleButtonClick} fileInputRef={fileInputRef} />
           </>
