@@ -50,7 +50,11 @@ module.exports = function(app, upload, openai, s3) {
       console.log(`Transcription started with ID: ${transcriptId}`);
 
       const transcription = await checkTranscriptionStatus(transcriptId);
-      res.json(transcription);
+      if (!transcription.text || transcription.text.trim() === '') {
+        return res.status(400).json({ error: 'Transcription is empty or unclear. Please upload a clearer recording.' });
+      }
+      
+      res.json(transcription); // if not empty, return transcription
     } catch (error) {
       console.error("Error starting transcription", error);
       res.status(500).send('Error starting transcription');
@@ -108,6 +112,12 @@ module.exports = function(app, upload, openai, s3) {
   // Helper function that uses OpenAI to summarize a conversation
   async function summarizeConversation(transcriptText) {
     console.log('Starting conversation summarization.');
+
+    // Check if transcriptText is empty or null
+    if (!transcriptText || transcriptText.trim() === '') {
+      console.log('Empty transcription text. Skipping summarization.');
+      return { summary: 'No content to summarize.', majorTopics: [], knowledgeGaps: [] };
+    }
 
     try {
       const completion = await openai.chat.completions.create({
