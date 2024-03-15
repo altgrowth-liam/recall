@@ -204,3 +204,51 @@ button:disabled {
 .window-top-right-logo:hover {
   transform: scale(1.2); /* Adjust scale value as needed */
 }
+
+/* Add this new class for fading out elements */
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  visibility: hidden;
+}
+
+/* New styles for UploadButton */
+.upload-button {
+  opacity: 1; /* Default opacity */
+  transition: opacity 0.5s ease-out, transform 0.3s ease;
+  position: relative;
+  padding: 8px 16px;
+  font-size: 16px;
+  overflow: hidden;
+  visibility: visible; /* Default visibility */
+  transform: scale(1); /* Default scale */
+}
+
+.upload-button-disabled {
+  opacity: 0.5;
+  visibility: hidden;
+}
+
+.upload-button span {
+  visibility: visible; /* Default visibility for span */
+}
+
+.upload-button-disabled span {
+  visibility: hidden;
+}
+
+/* .upload-button:hover {
+  transform: scale(1.1);
+} */
+
+.upload-button:not(:hover) {
+  transform: scale(1); /* Scale back on mouse out */
+}
+
+.logo-wrapper.disabled {
+  cursor: wait;
+}
+
+.logo-wrapper.disabled:hover {
+  transform: none; /* Prevents the hover effect */
+}

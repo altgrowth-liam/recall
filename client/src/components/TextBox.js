@@ -27,7 +27,7 @@ const TextBox = ({ isRecording, isLoading, slideshowMessages }) => {
               setDisplayText(slideshowMessages[(currentMessageIndex + 1) % slideshowMessages.length]);
               setOpacity(1); // Fade back in
             }, 500); // This matches the transition duration
-          }, 2500); // Adjust interval as needed
+          }, 2200); // set interval here
         }
   
         return () => {
