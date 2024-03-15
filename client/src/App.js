@@ -78,7 +78,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transcriptText: transcription.text }), // Ensure this matches the expected format for your backend
+        body: JSON.stringify({ transcriptText: transcription.text }),
       });
       if (!summarizeResponse.ok) {
         throw new Error('Failed to summarize transcription.');

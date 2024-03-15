@@ -10,7 +10,7 @@ module.exports = function(app, upload, openai, s3) {
     }
 
     const params = {
-      Bucket: 'recallbucket', // Use your bucket name
+      Bucket: 'recallbucket',
       Key: `uploads/${req.file.originalname}`,
       Body: req.file.buffer,
       ACL: 'public-read',
@@ -105,7 +105,7 @@ module.exports = function(app, upload, openai, s3) {
     });
   }
 
-  // Updated summarizeConversation function
+  // Helper function that uses OpenAI to summarize a conversation
   async function summarizeConversation(transcriptText) {
     console.log('Starting conversation summarization.');
 
