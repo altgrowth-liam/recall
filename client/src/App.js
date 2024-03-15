@@ -67,7 +67,15 @@ function App() {
         },
         body: JSON.stringify({ audioUrl: uploadResult.location }),
       });
+
+      // check if empty transcription
       if (!transcribeResponse.ok) {
+        const errorResponse = await transcribeResponse.json();
+        if (errorResponse.error) {
+          alert(errorResponse.error);
+          setIsLoading(false);
+          return; // Stop further processing since transcription was unsuccessful
+        }
         throw new Error('Failed to transcribe audio.');
       }
       const transcription = await transcribeResponse.json();
@@ -155,8 +163,19 @@ function App() {
               isLoading={isLoading} 
               slideshowMessages={slideshowMessages} 
             />
-            <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecordingAndUpload={stopRecordingAndUpload} />
-            <UploadButton isLoading={isLoading} handleFileChange={handleFileChange} handleButtonClick={handleButtonClick} fileInputRef={fileInputRef} />
+            <RecordButton 
+              isRecording={isRecording} 
+              isLoading={isLoading}
+              startRecording={startRecording} 
+              stopRecordingAndUpload={stopRecordingAndUpload} 
+            />
+            <UploadButton
+              isLoading={isLoading}
+              isRecording={isRecording}
+              handleFileChange={handleFileChange}
+              handleButtonClick={handleButtonClick}
+              fileInputRef={fileInputRef}
+            />
           </>
           )}
       </header>
