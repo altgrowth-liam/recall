@@ -1,6 +1,64 @@
 const axios = require('axios');
+const User = require('./models/User');
 
-module.exports = function(app, upload, openai, s3) {
+module.exports = function(app, upload, openai, s3, mongoose) {
+
+  // Register route
+  app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+  
+    if (!username || !password) {
+      return res.status(400).send('Username and password are required.');
+    }
+  
+    try {
+      // Check if user already exists
+      const existingUser = await mongoose.model('User').findOne({ username });
+      if (existingUser) {
+        return res.status(400).send('Username is already taken.');
+      }
+  
+      // Create a new user
+      const user = new (mongoose.model('User'))({ username, password });
+      await user.save();
+  
+      res.status(201).send('User created successfully.');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).send('Error creating user.');
+    }
+  });
+
+  // Login route
+  app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+  
+    if (!username || !password) {
+      return res.status(400).send('Username and password are required.');
+    }
+  
+    try {
+      const user = await mongoose.model('User').findOne({ username });
+      if (!user) {
+        return res.status(401).send('Invalid username or password.');
+      }
+  
+      // Compare password
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).send('Invalid username or password.');
+      }
+  
+      // Generate JWT
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  
+      res.json({ message: 'Logged in successfully', token });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).send('Error logging in.');
+    }
+  });
+
   // Upload route
   app.post('/upload', upload.single('file'), async (req, res) => {
     console.log('\n\n\n==================== NEW REQUEST: /upload ====================');
