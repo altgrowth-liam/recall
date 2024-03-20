@@ -5,11 +5,23 @@ const path = require('path');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const { OpenAI } = require('openai');
+const mongoose = require('mongoose');
 
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('MongoDB connected...');
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    console.error("exiting app");
+    process.exit(1); // Stop the app if the DB connection fails
+  });
 
 // Configure AWS
 AWS.config.update({
@@ -33,7 +45,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Import and use routes
-require('./routes')(app, upload, openai, s3);
+require('./routes')(app, upload, openai, s3, mongoose);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
